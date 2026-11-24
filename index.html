@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Quizzy – Online Quiz App</title>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#eef2f7;--surface:#fff;--ink:#14213d;--mute:#5b6784;--line:#d5dce8;--accent:#2f4bff;--on-accent:#fff;--ok:#12805a;--okbg:#dff5ec;--bad:#c2332e;--badbg:#fbe3e1;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){color-scheme:dark;--bg:#0f1526;--surface:#18203a;--ink:#eaeefb;--mute:#9aa6c8;--line:#2b3556;--accent:#7b90ff;--on-accent:#0f1526;--ok:#4fd3a0;--okbg:#12362c;--bad:#ff8a84;--badbg:#3d1d22}}
+:root[data-theme="dark"]{color-scheme:dark;--bg:#0f1526;--surface:#18203a;--ink:#eaeefb;--mute:#9aa6c8;--line:#2b3556;--accent:#7b90ff;--on-accent:#0f1526;--ok:#4fd3a0;--okbg:#12362c;--bad:#ff8a84;--badbg:#3d1d22}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Bricolage Grotesque",system-ui,-apple-system,"Segoe UI",sans-serif;line-height:1.5;min-height:100vh}
+main{max-width:640px;margin:0 auto;padding:28px 18px 48px}
+h1{font-size:clamp(2.2rem,7vw,3.4rem);font-weight:800;line-height:1.02;letter-spacing:-.03em;margin:0 0 10px}
+h2{font-size:1.5rem;margin:0 0 14px;letter-spacing:-.01em}
+p{margin:0 0 16px;color:var(--mute)}
+button{font:inherit;color:inherit;cursor:pointer}
+:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.topics{display:grid;gap:12px;margin:24px 0}
+.topic{display:flex;justify-content:space-between;align-items:center;gap:12px;text-align:left;background:var(--surface);border:2px solid var(--line);border-radius:14px;padding:16px 18px}
+.topic:hover{border-color:var(--accent)}
+.topic b{display:block;font-size:1.15rem}
+.topic span{color:var(--mute);font-size:.9rem}
+.topic em{font-style:normal;font-size:.85rem;color:var(--mute);white-space:nowrap}
+.btn{background:var(--accent);color:var(--on-accent);border:0;border-radius:12px;padding:13px 22px;font-weight:600;font-size:1rem}
+.btn.ghost{background:transparent;color:var(--ink);border:2px solid var(--line)}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.row{display:flex;gap:10px;flex-wrap:wrap;margin-top:18px}
+.bar{display:flex;gap:6px;margin-bottom:6px}
+.seg{flex:1;height:8px;border-radius:4px;background:var(--line)}
+.seg.done{background:var(--accent)}.seg.ok{background:var(--ok)}.seg.bad{background:var(--bad)}.seg.now{background:var(--mute)}
+.meta{display:flex;justify-content:space-between;color:var(--mute);font-size:.95rem;margin:10px 0 18px}
+.timer{font-weight:800;font-variant-numeric:tabular-nums}.timer.low{color:var(--bad)}
+.q{font-size:clamp(1.35rem,4.5vw,1.8rem);font-weight:600;line-height:1.25;margin:0 0 20px}
+.opts{display:grid;gap:10px}
+.opt{display:flex;gap:12px;align-items:center;text-align:left;background:var(--surface);border:2px solid var(--line);border-radius:12px;padding:14px 16px;font-size:1.05rem}
+.opt kbd{font:inherit;font-weight:800;color:var(--mute);min-width:1.2em}
+.opt:not(:disabled):hover{border-color:var(--accent)}
+.opt.ok{border-color:var(--ok);background:var(--okbg)}
+.opt.bad{border-color:var(--bad);background:var(--badbg)}
+.opt:disabled{cursor:default}
+.note{margin-top:16px;padding:12px 14px;border-radius:12px;background:var(--surface);border:2px solid var(--line);color:var(--ink)}
+.score{font-size:clamp(4rem,18vw,7rem);font-weight:800;letter-spacing:-.04em;line-height:1;margin:10px 0}
+.score small{font-size:.35em;color:var(--mute);font-weight:600;letter-spacing:0}
+.rev{list-style:none;padding:0;margin:18px 0;display:grid;gap:10px}
+.rev li{background:var(--surface);border:2px solid var(--line);border-left-width:8px;border-radius:12px;padding:12px 14px}
+.rev li.ok{border-left-color:var(--ok)}.rev li.bad{border-left-color:var(--bad)}
+.rev b{display:block;margin-bottom:4px}.rev span{color:var(--mute);font-size:.95rem}
+.top{display:flex;justify-content:flex-end;margin-bottom:6px}
+.top button{background:none;border:0;color:var(--mute);padding:6px}
+@media (prefers-reduced-motion:no-preference){.opt,.topic,.seg{transition:border-color .15s,background .15s}}
+</style>
+</head>
+<body>
+<main>
+  <div class="top"><button id="theme" type="button" aria-label="Toggle dark mode">Toggle theme</button></div>
+  <div id="app"></div>
+</main>
+<script>
+const QUIZ = {
+  "Web basics": [
+    ["Which HTML tag creates a hyperlink?",["<a>","<link>","<href>","<url>"],0,"The anchor tag <a> with an href attribute makes links."],
+    ["What does CSS stand for?",["Creative Style Sheets","Cascading Style Sheets","Computer Style Syntax","Colorful Style Sheets"],1,"CSS is short for Cascading Style Sheets."],
+    ["Which HTTP status code means “Not Found”?",["200","301","404","500"],2,"404 means the server can’t find the requested resource."],
+    ["Which language runs natively in the browser?",["Python","Java","JavaScript","Ruby"],2,"Browsers run JavaScript natively."],
+    ["What does an HTTP GET request usually do?",["Deletes data","Retrieves data","Uploads a file","Encrypts data"],1,"GET asks the server to return a resource."],
+    ["Which CSS property changes text color?",["font-color","text-style","color","foreground"],2,"The color property sets text color."]
+  ],
+  "Science": [
+    ["Which planet is closest to the Sun?",["Venus","Mercury","Mars","Earth"],1,"Mercury orbits closest to the Sun."],
+    ["What is H₂O commonly called?",["Salt","Hydrogen","Water","Peroxide"],2,"H₂O is two hydrogen atoms bonded to one oxygen: water."],
+    ["Which gas do plants absorb for photosynthesis?",["Oxygen","Nitrogen","Carbon dioxide","Helium"],2,"Plants take in carbon dioxide and release oxygen."],
+    ["How many bones does an adult human have?",["106","206","306","406"],1,"Adults have 206 bones."],
+    ["What is the chemical symbol for gold?",["Go","Gd","Au","Ag"],2,"Au comes from the Latin “aurum”."],
+    ["What force keeps us on the ground?",["Magnetism","Friction","Gravity","Inertia"],2,"Gravity pulls objects toward Earth’s center."]
+  ],
+  "General knowledge": [
+    ["What is the capital of Japan?",["Osaka","Kyoto","Tokyo","Nagoya"],2,"Tokyo has been Japan’s capital since 1868."],
+    ["Which is the largest ocean?",["Atlantic","Indian","Arctic","Pacific"],3,"The Pacific covers about a third of Earth’s surface."],
+    ["How many continents are there?",["5","6","7","8"],2,"By the common convention there are seven."],
+    ["Who painted the Mona Lisa?",["Michelangelo","Leonardo da Vinci","Raphael","Van Gogh"],1,"Leonardo da Vinci painted it in the early 1500s."],
+    ["Which country has the largest population in 2026?",["India","USA","Indonesia","Brazil"],0,"India has the world’s largest population."],
+    ["What is the smallest prime number?",["0","1","2","3"],2,"2 is the smallest prime, and the only even one."]
+  ]
+};
+const TIME = 20, app = document.getElementById("app");
+let S = {};
+const shuffle = a => { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.random() * (i + 1) | 0; [a[i], a[j]] = [a[j], a[i]]; } return a; };
+const esc = s => s.replace(/[&<>]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]));
+const best = t => { try { return localStorage.getItem("quizzy:" + t); } catch (e) { return null; } };
+const saveBest = (t, n) => { try { const b = +localStorage.getItem("quizzy:" + t) || 0; if (n >= b) localStorage.setItem("quizzy:" + t, n); } catch (e) {} };
+
+function home() {
+  clearInterval(S.t);
+  app.innerHTML = `<h1>Pick a quiz.<br>Beat the clock.</h1>
+  <p>Six questions per topic, ${TIME} seconds each. Press 1–4 to answer.</p>
+  <div class="topics">${Object.keys(QUIZ).map(t => { const b = best(t); return `<button class="topic" data-t="${t}"><div><b>${t}</b><span>${QUIZ[t].length} questions</span></div><em>${b !== null ? "Best " + b + "/" + QUIZ[t].length : "Not played"}</em></button>`; }).join("")}</div>`;
+  app.querySelectorAll(".topic").forEach(b => b.onclick = () => start(b.dataset.t));
+}
+
+function start(topic, only) {
+  const qs = shuffle(only || QUIZ[topic]).map(q => { const idx = shuffle([0, 1, 2, 3]); return { q: q[0], o: idx.map(i => q[1][i]), a: idx.indexOf(q[2]), n: q[3], pick: null }; });
+  S = { topic, qs, i: 0, t: null, left: TIME, locked: false, retry: !!only };
+  show();
+}
+
+function show() {
+  clearInterval(S.t);
+  const q = S.qs[S.i]; S.left = TIME; S.locked = false;
+  const segs = S.qs.map((x, k) => `<div class="seg ${k < S.i ? (x.pick === x.a ? "ok" : "bad") : k === S.i ? "now" : ""}"></div>`).join("");
+  app.innerHTML = `<div class="bar" aria-hidden="true">${segs}</div>
+  <div class="meta"><span>${esc(S.topic)} · Question ${S.i + 1} of ${S.qs.length}</span><span class="timer" id="tm">${TIME}s</span></div>
+  <p class="q">${esc(q.q)}</p>
+  <div class="opts">${q.o.map((o, k) => `<button class="opt" data-k="${k}"><kbd>${k + 1}</kbd><span>${esc(o)}</span></button>`).join("")}</div>
+  <div id="fb"></div>`;
+  app.querySelectorAll(".opt").forEach(b => b.onclick = () => answer(+b.dataset.k));
+  S.t = setInterval(() => {
+    S.left--; const tm = document.getElementById("tm");
+    if (tm) { tm.textContent = S.left + "s"; tm.classList.toggle("low", S.left <= 5); }
+    if (S.left <= 0) answer(-1);
+  }, 1000);
+}
+
+function answer(k) {
+  if (S.locked) return; S.locked = true; clearInterval(S.t);
+  const q = S.qs[S.i]; q.pick = k;
+  app.querySelectorAll(".opt").forEach((b, j) => { b.disabled = true; if (j === q.a) b.classList.add("ok"); else if (j === k) b.classList.add("bad"); });
+  const last = S.i === S.qs.length - 1;
+  document.getElementById("fb").innerHTML = `<div class="note" role="status"><b>${k === q.a ? "Correct." : k === -1 ? "Time’s up." : "Not quite."}</b> ${esc(q.n)}</div>
+  <div class="row"><button class="btn" id="nx" autofocus>${last ? "See results" : "Next question"}</button></div>`;
+  document.getElementById("nx").onclick = () => last ? results() : (S.i++, show());
+}
+
+function results() {
+  const n = S.qs.filter(q => q.pick === q.a).length, total = S.qs.length;
+  if (!S.retry) saveBest(S.topic, n);
+  const missed = S.qs.filter(q => q.pick !== q.a);
+  const msg = n === total ? "Perfect round." : n >= total * .7 ? "Strong result." : n >= total * .4 ? "Decent start. Try again to improve." : "Tough one. Review the answers below.";
+  app.innerHTML = `<h2>${esc(S.topic)}</h2><div class="score">${n}<small>/${total}</small></div><p>${msg}</p>
+  <ul class="rev">${S.qs.map(q => `<li class="${q.pick === q.a ? "ok" : "bad"}"><b>${esc(q.q)}</b><span>Answer: ${esc(q.o[q.a])}${q.pick !== q.a ? " · You chose: " + (q.pick === -1 ? "no answer" : esc(q.o[q.pick])) : ""}</span></li>`).join("")}</ul>
+  <div class="row"><button class="btn" id="again">Play again</button>${missed.length ? `<button class="btn ghost" id="miss">Retry ${missed.length} missed</button>` : ""}<button class="btn ghost" id="hm">All topics</button></div>`;
+  document.getElementById("again").onclick = () => start(S.topic);
+  if (missed.length) document.getElementById("miss").onclick = () => start(S.topic, QUIZ[S.topic].filter(r => missed.some(m => m.q === r[0])));
+  document.getElementById("hm").onclick = home;
+}
+
+document.addEventListener("keydown", e => {
+  if (!S.qs || S.locked || !document.querySelector(".opt")) return;
+  const k = +e.key - 1; if (k >= 0 && k < 4) answer(k);
+});
+
+document.getElementById("theme").onclick = () => {
+  const r = document.documentElement, dark = getComputedStyle(r).colorScheme.includes("dark");
+  r.dataset.theme = dark ? "light" : "dark";
+};
+home();
+</script>
+</body>
+</html>
